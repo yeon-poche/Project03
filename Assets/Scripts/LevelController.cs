@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class LevelController : MonoBehaviour
 {
     public Text _turnCount = null;
+    [SerializeField] GameObject _playerActionMenu = null;
+    [SerializeField] GameObject _enemyMenu = null;
 
     private int _currentTurn;
 
@@ -16,9 +18,22 @@ public class LevelController : MonoBehaviour
 
     private void Update()
     {
+        // DELETE OUT LATER, testing 
         if (Input.GetKeyDown(KeyCode.P))
         {
-            IncreaseTurn();
+           
+        }
+
+        // BACKSPACE = PLAYER INPUT MENU, DONT RESET 
+        if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+            _playerActionMenu.SetActive(true);
+            _enemyMenu.SetActive(false);
+        }
+
+        // RELOAD LEVEL WHEN R PRESSED 
+        if (Input.GetKeyDown(KeyCode.R)) {
+            
         }
     }
 
