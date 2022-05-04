@@ -13,6 +13,7 @@ public class TurnController : MonoBehaviour
     [SerializeField] Button _braveButton = null;
     [SerializeField] ButtonColor _braveButtonColor = null;
     public int _numberPlayerBraves = 0;
+    private bool _playerBraved = false;
 
     [Header("Default Options")]
     [SerializeField] Button _defaultButton = null;
@@ -26,6 +27,8 @@ public class TurnController : MonoBehaviour
     [SerializeField] GameObject _enemyMenu = null;
     [SerializeField] EnemyHealth _enemy01 = null;
     [SerializeField] EnemyHealth _enemy02 = null;
+    [SerializeField] ParticleSystem _enemy01PS = null;
+    [SerializeField] ParticleSystem _enemy02PS = null;
     [SerializeField] Button _enemy01Button = null;
     [SerializeField] Button _enemy02Button = null;
 
@@ -36,6 +39,12 @@ public class TurnController : MonoBehaviour
 
     [Header("Feedback/UI")]
     [SerializeField] Button _endTurnButton = null;
+    [SerializeField] AudioSource _attackSound = null;
+    [SerializeField] AudioSource _braveSound = null;
+    [SerializeField] AudioSource _defaultSound = null;
+    [SerializeField] AudioSource _endTurnSound = null;
+    [SerializeField] ParticleSystem _braveParticle = null;
+    [SerializeField] ParticleSystem _defaultParticle = null;
 
     // save start of phase variables
     private int _startingBP = 0;
@@ -140,7 +149,10 @@ public class TurnController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E) && (!_enemyMenuIsActive) && 
             !_maxAttacksReached) // player defaults with key
         {
-            Default();
+            if (!_playerBraved)
+            {
+                Default();
+            }
         }
 
         // OPEN ENEMY MENU
@@ -161,6 +173,8 @@ public class TurnController : MonoBehaviour
         _playerActionMenu.SetActive(false);
         _enemyMenu.SetActive(false);
         _endTurnPnl.SetActive(false);
+
+        _endTurnSound.Play();
     }
 
     public void StartPlayerTurn()
@@ -187,37 +201,48 @@ public class TurnController : MonoBehaviour
         _currentBP--;
         _bpCounter.text =
             _currentBP.ToString();
+        _braveSound.Play();
+
+        _playerBraved = true;
+        _defaultSound.mute = true;
+        _braveParticle.Play();
     }
 
     private void Default()
     {
-        if (!_playerDefaulted)
+        if (!_playerBraved)
         {
-            // disable brave button
-            _braveButton.interactable = false;
-            _braveButtonColor.DisableButtonColor();
+                // disable brave button
+                _braveButton.interactable = false;
+                _braveButtonColor.DisableButtonColor();
 
-            // disable default buttons
-            _defaultButton.interactable = false;
-            _defaultButtonColor.DisableButtonColor();
+                // disable default buttons
+                _defaultButton.interactable = false;
+                _defaultButtonColor.DisableButtonColor();
 
-            // disable attack buttons
-            _enemy01BC.DisableButtonColor();
-            _enemy02BC.DisableButtonColor();
+                // disable attack buttons
+                _enemy01BC.DisableButtonColor();
+                _enemy02BC.DisableButtonColor();
 
-            if (_currentBP < _maxBP) // cap bp at 3
-            {
-                // end turn, add 1 BP, update BP counter
-                _currentBP += 1;
-                _bpCounter.text =
-                    _currentBP.ToString();
-            }
-            else
-            {
-                _currentBP = _maxBP;
-            }
+                if (_currentBP < _maxBP) // cap bp at 3
+                {
+                    // end turn, add 1 BP, update BP counter
+                    _currentBP += 1;
+                    _bpCounter.text =
+                        _currentBP.ToString();
+                    _defaultParticle.Play();
+                }
+                else
+                {
+                    _currentBP = _maxBP;
+                    _braveParticle.Play();
+                }
         }
+        
         _playerDefaulted = true;
+        turnCanEnd = true;
+        _defaultSound.mute = false;
+        _defaultSound.Play();
     }
 
     private void AttackEnemyPhase()
@@ -229,11 +254,15 @@ public class TurnController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.A)) {
                 Debug.Log("enemy1 attacked");
                 _currentAttack += 1;
+                _attackSound.Play();
+                _enemy01PS.Play();
             }
             if (Input.GetKeyDown(KeyCode.D))
             {
                 Debug.Log("enemy2 attacked");
                 _currentAttack += 1;
+                _attackSound.Play();
+                _enemy02PS.Play();
             }
 
             if (_currentAttack == _numAttacks)
@@ -289,6 +318,7 @@ public class TurnController : MonoBehaviour
         _currentAttack = 0;
         _maxAttacksReached = false;
         turnCanEnd = false;
+        _playerBraved = false;
 
         // update canvas
         _bpCounter.text =
